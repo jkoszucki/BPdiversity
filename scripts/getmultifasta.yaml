@@ -1,0 +1,34 @@
+name: biopython
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - defaults
+dependencies:
+  - biopython=1.79=py39h89e85a6_0
+  - ca-certificates=2021.10.8=h033912b_0
+  - libblas=3.9.0=12_osx64_openblas
+  - libcblas=3.9.0=12_osx64_openblas
+  - libcxx=12.0.1=habf9029_0
+  - libffi=3.4.2=he49afe7_4
+  - libgfortran=5.0.0=9_3_0_h6c81a4c_23
+  - libgfortran5=9.3.0=h6c81a4c_23
+  - liblapack=3.9.0=12_osx64_openblas
+  - libopenblas=0.3.18=openmp_h3351f45_0
+  - libzlib=1.2.11=h9173be1_1013
+  - llvm-openmp=12.0.1=hda6cdc1_1
+  - ncurses=6.2=h2e338ed_4
+  - numpy=1.21.3=py39h7eed0ac_0
+  - openssl=3.0.0=h0d85af4_1
+  - pip=21.3.1=pyhd8ed1ab_0
+  - python=3.9.7=h38b4d05_3_cpython
+  - python_abi=3.9=2_cp39
+  - readline=8.1=h05e3726_0
+  - setuptools=58.2.0=py39h6e9494a_0
+  - sqlite=3.36.0=h23a322b_2
+  - tk=8.6.11=h5dbffcc_1
+  - tzdata=2021e=he74cb21_0
+  - wheel=0.37.0=pyhd8ed1ab_1
+  - xz=5.2.5=haf1e3a3_1
+  - zlib=1.2.11=h9173be1_1013
+prefix: /usr/local/anaconda3/envs/biopython

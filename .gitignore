@@ -1,0 +1,5 @@
+.snakemake
+.DS_store
+Rplots.pdf
+input
+output

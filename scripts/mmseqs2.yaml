@@ -1,0 +1,24 @@
+name: mmseqs2
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - defaults
+dependencies:
+  - bzip2=1.0.8=hc929b4f_4
+  - ca-certificates=2020.12.5=h033912b_0
+  - gawk=5.1.0=h8a989fb_0
+  - gettext=0.19.8.1=h7937167_1005
+  - libcxx=11.1.0=habf9029_0
+  - libffi=3.3=h046ec9c_2
+  - libiconv=1.16=haf1e3a3_0
+  - libidn2=2.3.0=h0b31af3_0
+  - libunistring=0.9.10=h1de35cc_0
+  - llvm-openmp=11.1.0=hda6cdc1_0
+  - mmseqs2=13.45111=h14b862d_1
+  - ncurses=6.2=h2e338ed_4
+  - openssl=1.1.1k=h0d85af4_0
+  - readline=8.1=h05e3726_0
+  - wget=1.20.1=h33e2efd_0
+  - zlib=1.2.11=h7795811_1010
+prefix: /usr/local/anaconda3/envs/mmseqs2

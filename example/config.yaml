@@ -1,0 +1,46 @@
+input:
+  # Bacterial tree in nexus format.
+  - input/tree-cutoff.nex
+  # Bacterial metadata (capsule & ST)
+  - input/metadata.csv
+  # Directory to annotated prophages in genbank format (seperate file) found in isolates that were used to build a tree.
+  - input/genbank
+
+output_dir:
+  - output
+
+# gbk by default.
+genbank_files_extension:
+  - gbk
+
+phage_variants:
+  min_pid:
+    - 0.9
+  min_subject_cov:
+    - 0.9
+  min_query_cov:
+    - 0.9
+
+receptor_binding_proteins:
+  aa_pident:
+    - 0.75
+  aa_cov:
+    - 0.8
+  rbp_key_words:
+    - tail fiber protein
+    - rna ligase and tail fiber protein attachment catalyst
+    - long tail fiber protein distal subunit
+    - tail collar fiber protein
+    - tail fiber protein proximal subunit
+    - long tail fiber protein proximal connector
+    - hinge connector of long tail fiber protein distal connector
+    - short tail fiber protein
+    - lytic tail fiber protein
+    - tail fiber protein; host specificity
+    - tail fiber protein/ lysozyme
+    - baseplate wedge tail fiber protein connector
+    - tail fiber protein and host specificity
+    - tail fiber protein; ig-domain containing
+    - tail spike protein
+    - pentameric base spike protein
+    - tail spike protein with colonic acid degradation activity
