@@ -1,6 +1,5 @@
 # Import modules.
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -44,16 +43,51 @@ def main():
     values='value', index=['query'], columns=['subject'], fill_value=0)
 
     # Column by columns get rows (phage names) that have value 1.
-    variants = [getPhageVariants(results_pivot, column) for column in phages]
-    # From phage names leave only unique - list of phage names is one variant.
-    uqvariants = list(set(variants))
+    phages_similar_dict = {phage: getPhageVariants(results_pivot, phage) for phage in phages}
+    # Get sorted phages that had the higher number of similar phages.
+    phages_sorted_keys = sorted(phages_similar_dict, key=lambda k: len(phages_similar_dict[k]), reverse=True)
+
+    ### Define variants ###
+    variants_dict = phages_similar_dict.copy()
+    # Iterate over each phage starting from the one that has highest number of similar phages.
+    for phage in phages_sorted_keys:
+        # If phage is still in dictionary go furher.
+        if phage in variants_dict.keys():
+            # Get similar phages to the given phage.
+            phages_variant = list(phages_similar_dict[phage])
+            # Update phage variants it the phage has already been asigned to the other variant.
+            updated_phages_variant = phages_variant.copy()
+            # Remove given phage from the list of similar phages.
+            phages_variant.remove(phage)
+
+            # Remove from dictionary of all phages ones that has already been assigned to the variant.
+            for phage_already_assigned in phages_variant:
+                # If phage that have been already assined cannot be removed form the dictionary
+                # it means that it already has been assigned to the variant ....
+                try:
+                    del variants_dict[phage_already_assigned]
+                except:
+                # .... Thus it has to be removed from the phages of the new variant.
+                    updated_phages_variant.remove(phage_already_assigned)
+
+            variants_dict[phage] = tuple(updated_phages_variant)
+
+        else: continue
+
+    # Prepare keys to sort from the biggest phage variant.
+    phages_keys = sorted(variants_dict, key=lambda k: len(variants_dict[k]), reverse=True)
+
+    # Prompt phage variants.
+    for phage in phages_keys:
+        print(f'Representant: {phage}. Members of variant: ===>', ','.join(variants_dict[phage]))
 
     # Save file as phage-variants.csv
     filerows = ['PV,phage\n']
-    for i, phages in enumerate(uqvariants):
+    for i, phage in enumerate(phages_keys):
+        phages_variant = variants_dict[phage]
         nvariant = f'PV{i+1}'
-        for phage in phages:
-            row = f'{nvariant},{phage}\n'
+        for phage_in_variant in phages_variant:
+            row = f'{nvariant},{phage_in_variant}\n'
             filerows.append(row)
 
     with open(phage_variants, 'w+') as f:
