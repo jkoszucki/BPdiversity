@@ -39,10 +39,10 @@ for infile, msg in zip(infiles, messages):
 
 rule target:
     input:
-        # Path(OUTPUT_DIR, 'phages', 'phage-variants.csv'),
+        Path(OUTPUT_DIR, 'phages', 'phage-variants.csv'),
         # Path(OUTPUT_DIR, 'rbps', 'rbp-variants.csv'),
         # Path(OUTPUT_DIR, f'metadata.csv'),
-        Path(OUTPUT_DIR, f'phyloheatmap2-{CUTOFF}.pdf')
+        # Path(OUTPUT_DIR, f'phyloheatmap2-{CUTOFF}.pdf')
 
 
 rule multifasta:
