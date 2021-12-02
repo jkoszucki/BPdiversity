@@ -118,13 +118,13 @@ def main():
     # Load metadata path.
     metadata = snakemake.params.metadata
     # Save file as phage-variants-extended.csv
-    filerows = ['PV,representat,phage,K_locus,K_locus_confidence\n']
+    filerows = ['PV,representat,phage,K_locus,ST,K_locus_confidence\n']
     for i, phage in enumerate(phages_keys):
         phages_variant = variants_dict[phage]
         nvariant = f'PV{i+1}'
         for phage_in_variant in phages_variant:
             capsule_type, capsule_confidence = getCapsuleType(phage_in_variant, metadata)
-            row = f'{nvariant},{phage},{phage_in_variant},{capsule_type},{capsule_confidence}\n'
+            row = f'{nvariant},{phage},{phage_in_variant},{capsule_type},{ST},{capsule_confidence}\n'
             filerows.append(row)
 
     output_extended = Path(Path(output).parent, 'phage-variants-extended.csv')
@@ -147,8 +147,9 @@ def getCapsuleType(phage, metadata):
     filt = (medatada_df['ID'] == genome_name)
     capsule_type = medatada_df.loc[filt]['K_locus'].values[0]
     capsule_confidence = medatada_df.loc[filt]['K_locus_confidence'].values[0]
+    ST = medatada_df.loc[filt]['ST'].values[0]
 
-    return str(capsule_type), str(capsule_confidence)
+    return str(capsule_type), str(capsule_confidence), str(ST)
 
 
 if __name__ == '__main__':
