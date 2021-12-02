@@ -85,7 +85,8 @@ rule phageVariants:
     params:
         min_pid=config['phage_variants']['min_pid'],
         min_scov=config['phage_variants']['min_subject_cov'],
-        min_qcov=config['phage_variants']['min_query_cov']
+        min_qcov=config['phage_variants']['min_query_cov'],
+        metadata=BACTERIAL_METADATA
     conda: 'scripts/phagevariants.yaml'
     script: 'scripts/get_phage_variants.py'
 

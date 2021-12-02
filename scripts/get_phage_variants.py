@@ -1,4 +1,5 @@
 # Import modules.
+from pathlib import Path
 import pandas as pd
 import numpy as np
 
@@ -12,7 +13,7 @@ def main():
 
     # Define I/O paths.
     concat_results = snakemake.input[0]
-    phage_variants = snakemake.output[0]
+    output = snakemake.output[0]
 
     # Define header of data frame.
     results_header = ['query', 'subject', 'pid', 'qcov', 'scov']
@@ -74,12 +75,29 @@ def main():
 
         else: continue
 
-    # Prepare keys to sort from the biggest phage variant.
+
+    ### Switch representat phage (key) to a longest phage in the variant. ###
+    variants_resorted_dict = {}
+    # Sort phages accordingly to the length (the longest is first in list)
+    for phage in variants_dict.keys():
+        # Sorting list "in place". It will change the list in dictionary (the same list).
+        phages_variant = variants_dict[phage]
+        phages_variant = sorted(phages_variant, key=lambda phage: int(phage.split('_')[-1]) - int(phage.split('_')[-2]) + 1, reverse=True)
+        # Get the longest phage.
+        phage_longest = phages_variant[0]
+        # Create new dictionary. Longest phage is the key and value (list) contains all of the variant phages.
+        variants_resorted_dict[phage_longest] = phages_variant
+
+    # Overwrite the variants dict with new dict, where the key is the longest phage.
+    variants_dict = variants_resorted_dict
+
+    # Prepare keys to sort from the "biggest" (most numerous) phage variant.
     phages_keys = sorted(variants_dict, key=lambda k: len(variants_dict[k]), reverse=True)
 
-    # Prompt phage variants.
+    # Prompt phage variants with representant (longest phage).
     for phage in phages_keys:
-        print(f'Representant: {phage}. Members of variant: ===>', ','.join(variants_dict[phage]))
+        print(f'Representant (longest phage): {phage}. Members of variant (sorted by lengths): ===>', ','.join(variants_dict[phage]))
+
 
     # Save file as phage-variants.csv
     filerows = ['PV,phage\n']
@@ -90,7 +108,27 @@ def main():
             row = f'{nvariant},{phage_in_variant}\n'
             filerows.append(row)
 
-    with open(phage_variants, 'w+') as f:
+    with open(output, 'w+') as f:
+        f.write(''.join(filerows))
+
+    ### Extend phage variants table ###
+    # Add information about representative phage of the variant.
+    # Add information about capsule type of the phage.
+
+    # Load metadata path.
+    metadata = snakemake.params.metadata
+    # Save file as phage-variants-extended.csv
+    filerows = ['PV,representat,phage,K_locus,K_locus_confidence\n']
+    for i, phage in enumerate(phages_keys):
+        phages_variant = variants_dict[phage]
+        nvariant = f'PV{i+1}'
+        for phage_in_variant in phages_variant:
+            capsule_type, capsule_confidence = getCapsuleType(phage_in_variant, metadata)
+            row = f'{nvariant},{phage},{phage_in_variant},{capsule_type},{capsule_confidence}\n'
+            filerows.append(row)
+
+    output_extended = Path(Path(output).parent, 'phage-variants-extended.csv')
+    with open(output_extended, 'w+') as f:
         f.write(''.join(filerows))
 
 
@@ -100,6 +138,17 @@ def getPhageVariants(pivot_table, column):
     phages = pivot_table.loc[filt_variants].index.to_list()
     phages = sorted(phages)
     return tuple(phages)
+
+
+def getCapsuleType(phage, metadata):
+    medatada_df = pd.read_csv(metadata, sep=';', header='infer', na_values='-')
+    genome_name = phage.split('.')[0]
+
+    filt = (medatada_df['ID'] == genome_name)
+    capsule_type = medatada_df.loc[filt]['K_locus'].values[0]
+    capsule_confidence = medatada_df.loc[filt]['K_locus_confidence'].values[0]
+
+    return str(capsule_type), str(capsule_confidence)
 
 
 if __name__ == '__main__':
