@@ -36,11 +36,11 @@ def main():
     results_df = results_df.loc[filt_variants]
 
     # Prepare data frame for transforming to pivot table.
-    results_df = results_df[['query', 'subject']]
-    results_df['value'] = 1
+    results_coverage_df = results_df[['query', 'subject']]
+    results_coverage_df['value'] = 1
 
     # Transform data frame to pivot table.
-    results_pivot = pd.pivot_table(results_df, \
+    results_pivot = pd.pivot_table(results_coverage_df, \
     values='value', index=['query'], columns=['subject'], fill_value=0)
 
     # Column by columns get rows (phage names) that have value 1.
@@ -83,10 +83,8 @@ def main():
         # Sorting list "in place". It will change the list in dictionary (the same list).
         phages_variant = variants_dict[phage]
         phages_variant = sorted(phages_variant, key=lambda phage: int(phage.split('_')[-1]) - int(phage.split('_')[-2]) + 1, reverse=True)
-        # Get the longest phage.
-        phage_longest = phages_variant[0]
         # Create new dictionary. Longest phage is the key and value (list) contains all of the variant phages.
-        variants_resorted_dict[phage_longest] = phages_variant
+        variants_resorted_dict[phage] = phages_variant
 
     # Overwrite the variants dict with new dict, where the key is the longest phage.
     variants_dict = variants_resorted_dict
@@ -96,16 +94,16 @@ def main():
 
     # Prompt phage variants with representant (longest phage).
     for phage in phages_keys:
-        print(f'Representant (longest phage): {phage}. Members of variant (sorted by lengths): ===>', ','.join(variants_dict[phage]))
+        print(f'Query: {phage}\nSubjects (phages of the variant):', ','.join(variants_dict[phage]), '\n', f'Longest phage:{variants_dict[phage][0]}\n')
 
 
     # Save file as phage-variants.csv
-    filerows = ['PV,phage\n']
+    filerows = ['PV,query,subject\n']
     for i, phage in enumerate(phages_keys):
         phages_variant = variants_dict[phage]
         nvariant = f'PV{i+1}'
         for phage_in_variant in phages_variant:
-            row = f'{nvariant},{phage_in_variant}\n'
+            row = f'{nvariant},{phage},{phage_in_variant}\n'
             filerows.append(row)
 
     with open(output, 'w+') as f:
@@ -115,16 +113,19 @@ def main():
     # Add information about representative phage of the variant.
     # Add information about capsule type of the phage.
 
-    # Load metadata path.
+    # Load metadata.
     metadata = snakemake.params.metadata
+    metadata_df = pd.read_csv(metadata, sep=';', header='infer', na_values='-')
+
     # Save file as phage-variants-extended.csv
-    filerows = ['PV,representat,phage,K_locus,ST,K_locus_confidence\n']
+    filerows = ['PV,query,subject,longest_phage,qcov,scov,K_locus,ST,K_locus_confidence,\n']
     for i, phage in enumerate(phages_keys):
         phages_variant = variants_dict[phage]
         nvariant = f'PV{i+1}'
         for phage_in_variant in phages_variant:
-            capsule_type, capsule_confidence = getCapsuleType(phage_in_variant, metadata)
-            row = f'{nvariant},{phage},{phage_in_variant},{capsule_type},{ST},{capsule_confidence}\n'
+            capsule_type, capsule_confidence, ST = getCapsuleType(phage_in_variant, metadata_df)
+            qcov, scov = getCoverage(phage_in_variant, results_df)
+            row = f'{nvariant},{phage},{phage_in_variant},{phages_variant[0]},{qcov},{scov},{capsule_type},{ST},{capsule_confidence}\n'
             filerows.append(row)
 
     output_extended = Path(Path(output).parent, 'phage-variants-extended.csv')
@@ -140,17 +141,27 @@ def getPhageVariants(pivot_table, column):
     return tuple(phages)
 
 
-def getCapsuleType(phage, metadata):
-    medatada_df = pd.read_csv(metadata, sep=';', header='infer', na_values='-')
+def getCapsuleType(phage, metadata_df):
     genome_name = phage.split('.')[0]
 
-    filt = (medatada_df['ID'] == genome_name)
-    capsule_type = medatada_df.loc[filt]['K_locus'].values[0]
-    capsule_confidence = medatada_df.loc[filt]['K_locus_confidence'].values[0]
-    ST = medatada_df.loc[filt]['ST'].values[0]
+    filt = (metadata_df['ID'] == genome_name)
+    capsule_type = metadata_df.loc[filt]['K_locus'].values[0]
+    capsule_confidence = metadata_df.loc[filt]['K_locus_confidence'].values[0]
+    ST = metadata_df.loc[filt]['ST'].values[0]
 
     return str(capsule_type), str(capsule_confidence), str(ST)
 
+def getCoverage(phage_in_variant, results_df):
+    filt = (results_df['subject'] == phage_in_variant)
+    qcov = results_df.loc[filt]['qcov'].values[0]
+    scov = results_df.loc[filt]['scov'].values[0]
+    
+    if qcov > 1: qcov = 1
+    if scov > 1: scov = 1
+
+    qcov = round(qcov, 2)
+    scov = round(scov, 2)
+    return str(qcov), str(scov)
 
 if __name__ == '__main__':
     main()
