@@ -117,8 +117,8 @@ def main():
     metadata = snakemake.params.metadata
     metadata_df = pd.read_csv(metadata, sep=';', header='infer', na_values='-')
 
-    # Save file as phage-variants-extended.csv
-    filerows = ['PV,query,subject,longest_phage,qcov,scov,K_locus,ST,K_locus_confidence,\n']
+    # Save file as phage-variants-extended.csv3
+    filerows = ['PV,query,subject,longest_phage,qcov,scov,K_locus,ST,K_locus_confidence\n']
     for i, phage in enumerate(phages_keys):
         phages_variant = variants_dict[phage]
         nvariant = f'PV{i+1}'
@@ -155,7 +155,7 @@ def getCoverage(phage_in_variant, results_df):
     filt = (results_df['subject'] == phage_in_variant)
     qcov = results_df.loc[filt]['qcov'].values[0]
     scov = results_df.loc[filt]['scov'].values[0]
-    
+
     if qcov > 1: qcov = 1
     if scov > 1: scov = 1
 

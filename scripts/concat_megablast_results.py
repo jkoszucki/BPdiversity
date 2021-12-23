@@ -40,6 +40,8 @@ def main():
     mmseqs_df['query'] = mmseqs_df.apply(lambda row: '_'.join(row['query'].split('_')[:4]), axis=1)
     mmseqs_df['subject'] = mmseqs_df.apply(lambda row: '_'.join(row['subject'].split('_')[:4]), axis=1)
 
+
+    print('Improve prefiltering of results! Do concatenate results within the same regions!!!')
     # Prefilter megablast results.
     # Filter mmseqs results - only significant hits.
     filt_pid = (mmseqs_df['pid'] >= 0.75)
