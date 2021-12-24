@@ -12,7 +12,7 @@ PHAGES_DIR = config['input'][2]
 OUTPUT_DIR = config['output_dir'][0]
 
 # Extension of prophage files in genbank format.
-EXTENSION_GENBANK, = config.get('genbank_files_extension', 'gbk')
+EXTENSION_GENBANK, = config.get('genbank_files_extension', 'gb')
 # Number of threads to be used.
 THREADS = config.get('threads', 8)
 # Lineage cutoff to be used (eg, 0.01 or 0.004)
@@ -48,6 +48,7 @@ rule target:
 rule multifasta:
     input: expand(Path(PHAGES_DIR, "{phage}." + EXTENSION_GENBANK), phage=phages)
     output: Path(OUTPUT_DIR, "phages", "phages.mf")
+    params: extension=EXTENSION_GENBANK,
     conda: 'scripts/getmultifasta.yaml'
     script: 'scripts/get_multifasta.py'
 

@@ -1,13 +1,15 @@
 from Bio import SeqIO
 
-genbankfiles = snakemake.input
+files = snakemake.input
 multifasta = snakemake.output[0]
+ext = snakemake.params.extension[0]
+
 
 def load_genbank(file):
-    record = list(SeqIO.parse(file, 'genbank'))[0]
-    record.description = ''
-    record.id = '_'.join(record.id.split('_')[:-2])
+    record = list(SeqIO.parse(file, str(ext)))[0]
+    # record.description = ''
+    # record.id = '_'.join(record.id.split('_')[:-2])
     return record
 
-records = list(map(load_genbank, genbankfiles))
+records = list(map(load_genbank, files))
 n = SeqIO.write(records, multifasta, 'fasta')
