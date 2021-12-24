@@ -37,11 +37,11 @@ def main():
     mmseqs_df.columns = mmseqs_header
 
     # Make subject and query names pretty.
-    mmseqs_df['query'] = mmseqs_df.apply(lambda row: '_'.join(row['query'].split('_')[:4]), axis=1)
-    mmseqs_df['subject'] = mmseqs_df.apply(lambda row: '_'.join(row['subject'].split('_')[:4]), axis=1)
+    # mmseqs_df['query'] = mmseqs_df.apply(lambda row: '_'.join(row['query'].split('_')[:4]), axis=1)
+    # mmseqs_df['subject'] = mmseqs_df.apply(lambda row: '_'.join(row['subject'].split('_')[:4]), axis=1)
 
 
-    print('Improve prefiltering of results! Do concatenate results within the same regions!!!')
+    print('Improve prefiltering of results! Concatenate results within the same regions!!!')
     # Prefilter megablast results.
     # Filter mmseqs results - only significant hits.
     filt_pid = (mmseqs_df['pid'] >= 0.75)
@@ -94,9 +94,9 @@ def getCoverage(df, qcov=True):
 
 def getLength(query):
     """ Calculates length of query/subject from its name (string). """
-    start = int(query.split('_')[-2])
-    stop = int(query.split('_')[-1])
-    return stop-start
+    length = str(query.split('_')[-4])
+    # stop = int(query.split('_')[-1])
+    return length
 
 
 def concatenateLocalAlignmentsUnpack(args):
