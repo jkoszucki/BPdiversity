@@ -2,7 +2,7 @@ from Bio import SeqIO
 
 files = snakemake.input
 multifasta = snakemake.output[0]
-ext = snakemake.params.extension[0]
+ext = snakemake.params.extension
 
 
 def load_genbank(file):
