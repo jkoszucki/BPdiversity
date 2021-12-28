@@ -83,8 +83,9 @@ def main():
         # Sorting list "in place". It will change the list in dictionary (the same list).
         phages_variant = variants_dict[phage]
         phages_variant = sorted(phages_variant, key=lambda phage: int(phage.split('_')[4]), reverse=True)
+        longest_phage = phages_variant[0]
         # Create new dictionary. Longest phage is the key and value (list) contains all of the variant phages.
-        variants_resorted_dict[phage] = phages_variant
+        variants_resorted_dict[longest_phage] = phages_variant
 
     # Overwrite the variants dict with new dict, where the key is the longest phage.
     variants_dict = variants_resorted_dict
