@@ -13,90 +13,113 @@ import itertools
 ##############################################
 
 ##############################################
-# Here instead of mmseqs results blast #######
+# Here instead of blast results blast #######
 # results are given. #########################
 ##############################################
 
 def main():
     # Define I/O paths.
-    # NOTE: mmseqs OR blast results.
-    mmseqs_results = snakemake.input[0]
+    # NOTE: blast OR blast results.
+    blast_results = snakemake.input[0]
     table_output = snakemake.output[0]
+    phage_names = snakemake.params.phage_names
+    extension = snakemake.params.extension
+    phages_dir = snakemake.params.phages_dir
 
     # Remove lines starting with hash if results are in blast format.
-    clearBLAST(mmseqs_results)
+    clearBLAST(blast_results)
 
     # Define data frames headers.
-    mmseqs_header = ['query', 'subject', 'pid','alilength','missmatch',\
+    blast_header = ['query', 'subject', 'pid','alilength','missmatch',\
                      'gapopen','qstart','qend','sstart','send','evalue',\
                      'bitscore']
     results_header = ['query', 'subject', 'pid', 'qcov', 'scov']
 
-    # Load results of mmseqs search and name columns.
-    mmseqs_df = pd.read_csv(mmseqs_results, sep='\t', header=None)
-    mmseqs_df.columns = mmseqs_header
+    # Load results of blast search and name columns.
+    blast_df = pd.read_csv(blast_results, sep='\t', header=None)
+    blast_df.columns = blast_header
 
-    # Make subject and query names pretty.
-    # mmseqs_df['query'] = mmseqs_df.apply(lambda row: '_'.join(row['query'].split('_')[:4]), axis=1)
-    # mmseqs_df['subject'] = mmseqs_df.apply(lambda row: '_'.join(row['subject'].split('_')[:4]), axis=1)
+    # Get fullnames of phages.
+    blast_df['query'] = blast_df.apply(get_fullname, args=(['query', phage_names]), axis=1)
+    blast_df['subject'] = blast_df.apply(get_fullname, args=(['subject', phage_names]), axis=1)
 
 
     print('Improve prefiltering of results! Concatenate results within the same regions!!!')
     # Prefilter megablast results.
-    # Filter mmseqs results - only significant hits.
-    filt_pid = (mmseqs_df['pid'] >= 0.75)
-    filt_eval = (mmseqs_df['evalue'] <= 10**-3)
-    filt_bitscore = (mmseqs_df['bitscore'] >= 100)
-    filt = filt_pid & filt_eval & filt_bitscore
-    mmseqs_df = mmseqs_df.loc[filt]
+    # Filter blast results - only significant hits.
+    filt_pid = (blast_df['pid'] >= 0.75)
+    filt_eval = (blast_df['evalue'] <= 10**-3)
+    filt_bitscore = (blast_df['bitscore'] >= 100)
+    filt_alignment = (blast_df['alilength'] >= 300)
+    filt = filt_pid & filt_eval & filt_bitscore & filt_alignment
+    blast_df = blast_df.loc[filt]
 
     # Calculate and add to data frame query and subject coverages.
-    qcov, scov = getCoverage(mmseqs_df, qcov=True),  getCoverage(mmseqs_df, qcov=False)
-    mmseqs_df['qcov'], mmseqs_df['scov'] = abs(qcov), abs(scov)
+    blast_df['qcov'] = blast_df.apply(getCoverage, args=(['qcov', extension, phages_dir]), axis=1)
+    blast_df['scov'] = blast_df.apply(getCoverage, args=(['scov', extension, phages_dir]), axis=1)
 
     # Get list of unique phage names.
-    phages = list(set(mmseqs_df['query'].to_list()))
+    phages = list(set(blast_df['query'].to_list()))
 
     # Prepare input for multiprocessing.
     processes_pool = mp.Pool()
-    mmseqs_df_list = [mmseqs_df]*(len(phages)*len(phages))
+    blast_df_list = [blast_df]*(len(phages)*len(phages))
     q1, q2 = zip(*list(itertools.product(phages, repeat=2)))
-    df_q1_q2 = list(zip(mmseqs_df_list, q1, q2))
+    df_q1_q2 = list(zip(blast_df_list, q1, q2))
 
     # Run analysis via multiproccessing.
     with mp.Pool() as pool:
         results_rows = pool.map(concatenateLocalAlignmentsUnpack, df_q1_q2)
     results_rows = [row[:-1] for row in results_rows]
 
-    # MMseqs phages results: all vs all.
+    # blast phages results: all vs all.
     results_df = pd.DataFrame(results_rows)
     results_df.columns = results_header
+
+    # Remove rows with qcov & scov equal 0.
+    filt_empty_query = (results_df['qcov'] == 0.0)
+    filt_empty_subject = (results_df['scov'] == 0.0)
+    filt_empty_hits = filt_empty_query & filt_empty_subject
+
+    results_df = results_df.loc[~filt_empty_hits]
+
     results_df.to_csv(table_output, sep='\t', index=False)
 
 
 # Define functions.
-def getCoverage(df, qcov=True):
+def get_fullname(phage_row, column, phage_names):
+    """Substitute phage ordinal number by phage full name."""
+    for phage_name in phage_names:
+        if phage_row[column] == int(phage_name.split('_')[0]):
+            return phage_name
+
+
+def getCoverage(phage_row, column, extension, phages_dir, qcov=True):
     """ Calculates coverage of queries/subjects.
         Returns numpy array of queries/subjects coverages from whole dataframe. """
-    if qcov:
+    if column == 'qcov':
         end, start = 'qend', 'qstart'
-        queries = df['query']
-    else:
+        query = phage_row['query']
+    elif column == 'scov':
         end, start = 'send', 'sstart'
-        queries = df['subject']
+        query = phage_row['subject']
+    else:
+        print('Error in getCoverage function')
+        exit()
 
-    phage_lengths = [getLength(query) for query in queries]
-    phage_lengths = np.array(phage_lengths)
-    seq_lengths = np.array((df[end] - df[start]))
-    seq_coverage = seq_lengths/phage_lengths
-    return np.round(seq_coverage, 6)
+    phage_length = getLength(query, extension, phages_dir)
+    seq_length = abs((phage_row[end] - phage_row[start]))
+
+    seq_coverage = seq_length/phage_length
+    seq_coverage = round(seq_coverage, 2)
+    return seq_coverage
 
 
-def getLength(query):
-    """ Calculates length of query/subject from its name (string). """
-    length = str(query.split('_')[-4])
-    # stop = int(query.split('_')[-1])
-    return length
+def getLength(query, extension, phages_dir):
+    """ Calculates length of query/subject. """
+    phage_path = Path(phages_dir, query + f'.{extension}')
+    phage_record = list(SeqIO.parse(phage_path, extension))[0]
+    return len(phage_record.seq)
 
 
 def concatenateLocalAlignmentsUnpack(args):

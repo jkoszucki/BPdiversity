@@ -82,7 +82,7 @@ def main():
     for phage in variants_dict.keys():
         # Sorting list "in place". It will change the list in dictionary (the same list).
         phages_variant = variants_dict[phage]
-        phages_variant = sorted(phages_variant, key=lambda phage: int(phage.split('_')[-1]) - int(phage.split('_')[-2]) + 1, reverse=True)
+        phages_variant = sorted(phages_variant, key=lambda phage: int(phage.split('_')[-4]), reverse=True)
         # Create new dictionary. Longest phage is the key and value (list) contains all of the variant phages.
         variants_resorted_dict[phage] = phages_variant
 
@@ -142,7 +142,7 @@ def getPhageVariants(pivot_table, column):
 
 
 def getCapsuleType(phage, metadata_df):
-    genome_name = phage.split('.')[0]
+    genome_name = phage.split('_')[-1].split('.')[0]
 
     filt = (metadata_df['ID'] == genome_name)
     capsule_type = metadata_df.loc[filt]['K_locus'].values[0]

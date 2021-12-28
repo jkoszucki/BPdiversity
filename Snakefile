@@ -12,17 +12,17 @@ PHAGES_DIR = config['input'][2]
 OUTPUT_DIR = config['output_dir'][0]
 
 # Extension of prophage files in genbank format.
-EXTENSION_GENBANK, = config.get('genbank_files_extension', 'gb')
+EXTENSION, = config.get('files_extension', 'fasta')
 # Number of threads to be used.
 THREADS = config.get('threads', 8)
 # Lineage cutoff to be used (eg, 0.01 or 0.004)
 CUTOFF = config.get('lineage_cutoff', 0)[0]
-phages, = glob_wildcards(Path(PHAGES_DIR, "{genome}." + EXTENSION_GENBANK))
+phages, = glob_wildcards(Path(PHAGES_DIR, "{genome}." + EXTENSION))
 
 # Prompt given input.
 print(f'Loaded bacterial distances (patristic) matrix: {MASHTABLE} with cutoff {CUTOFF}')
 print(f'Running pipeline on genomes from folder: {PHAGES_DIR}')
-print(f'With extension: {EXTENSION_GENBANK}')
+print(f'With extension: {EXTENSION}')
 print(f'Metadata loaded from: {BACTERIAL_METADATA}')
 print(f'Rusults in: {OUTPUT_DIR}')
 
@@ -46,9 +46,9 @@ rule target:
 
 
 rule multifasta:
-    input: expand(Path(PHAGES_DIR, "{phage}." + EXTENSION_GENBANK), phage=phages)
+    input: expand(Path(PHAGES_DIR, "{phage}." + EXTENSION), phage=phages)
     output: Path(OUTPUT_DIR, "phages", "phages.mf")
-    params: extension=EXTENSION_GENBANK,
+    params: extension=EXTENSION,
     conda: 'scripts/getmultifasta.yaml'
     script: 'scripts/get_multifasta.py'
 
@@ -72,7 +72,11 @@ rule concatmegablast:
     input: rules.megablast.output
     output: Path(OUTPUT_DIR, "phages", "blast-results-concat.txt")
     # Prefiltering of megablast results! Hardcoded parameters at the moment!
-    # params:
+    params:
+        phage_names=phages,
+        extension=EXTENSION,
+        phages_dir=PHAGES_DIR
+
         # min_pid=config['prefilt']['min_pid'],
         # min_scov=config['prefilt']['min_subject_cov'],
         # min_qcov=config['prefilt']['min_query_cov']
@@ -93,7 +97,7 @@ rule phageVariants:
 
 
 # rule rbpProteins:
-#     input: expand(Path(PHAGES_DIR, "{phage}." + EXTENSION_GENBANK), phage=phages)
+#     input: expand(Path(PHAGES_DIR, "{phage}." + EXTENSION), phage=phages)
 #     output: Path(OUTPUT_DIR, 'rbps', 'rbp-proteins.csv')
 #     params:
 #         rbp_key_words=config['receptor_binding_proteins']['rbp_key_phrases']

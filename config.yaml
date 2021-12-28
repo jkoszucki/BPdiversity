@@ -4,7 +4,7 @@ input:
   # Bacterial metadata (capsule & ST)
   - input/KASPAH.csv
    # Directory to annotated prophages in genbank format (seperate file) found in isolates that were used to build a tree.
-  - input/phages-genbank-all
+  - input/phages-fasta-KASPAH99
 
 output_dir:
   - output
@@ -14,8 +14,8 @@ lineage_cutoff:
   - 0.004
 
 # gbk by default.
-genbank_files_extension:
-  - gbk
+files_extension:
+  - fasta
 
 phage_variants:
   min_pid:
