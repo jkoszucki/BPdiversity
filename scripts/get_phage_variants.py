@@ -83,7 +83,6 @@ def main():
         # Sorting list "in place". It will change the list in dictionary (the same list).
         phages_variant = variants_dict[phage]
         phages_variant = sorted(phages_variant, key=lambda phage: int(phage.split('_')[4]), reverse=True)
-        print(phages_variant)
         # Create new dictionary. Longest phage is the key and value (list) contains all of the variant phages.
         variants_resorted_dict[phage] = phages_variant
 
@@ -94,8 +93,8 @@ def main():
     phages_keys = sorted(variants_dict, key=lambda k: len(variants_dict[k]), reverse=True)
 
     # Prompt phage variants with representant (longest phage).
-    # for phage in phages_keys:
-    #     print(f'Query: {phage}\nSubjects (phages of the variant):', ','.join(variants_dict[phage]), '\n', f'Longest phage:{variants_dict[phage][0]}\n')
+    for phage in phages_keys:
+        print(f'Query: {phage}\nSubjects (phages of the variant):', ','.join(variants_dict[phage]), '\n', f'Longest phage:{variants_dict[phage][0]}\n')
 
 
     # Save file as phage-variants.csv
